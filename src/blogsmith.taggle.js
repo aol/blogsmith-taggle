@@ -59,7 +59,7 @@
       ui.easyTags = $('<div />', {
         id: 'easyTags'
       }).prependTo(ui.insideBox);
-      ui.easyTagList = $('<ul />');
+      ui.easyTagList = $('<ul />').addClass('taggle-tag-list');
 
       if (ui.title) {
         ui.easyTagTitle = $('<h4 />', {
@@ -315,7 +315,7 @@
         this._sortEasyTags();
 
 
-        ui.easyTagList.children().each($.proxy(function ( i, item) {
+        ui.easyTagList.children().each($.proxy(function (i, item) {
 
           this._addAdminElements($(item));
 

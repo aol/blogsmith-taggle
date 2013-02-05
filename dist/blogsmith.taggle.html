@@ -1,5 +1,5 @@
 <!--
-* Interlinks - v0.1.0 - 2013-02-05, 3:51PM EST
+* Interlinks - v0.1.0 - 2013-02-05, 4:47PM EST
 * A Blogsmith plugin for adding relevant links to internal content to Blogsmith posts.
 * https://github.com/aol/blogsmith-interlinks
 * Copyright (c) 2013 Nate Eagle and Shawn Carnell; Licensed BSD
@@ -7,8 +7,106 @@
 
 <style type="text/css">
 
-a.interlink {
-    background-color: hsl(200, 100%, 80%);
+#easyTags {
+    clear: both;
+    padding: 0 0 10px;
+    position: relative;
+}
+
+#easyTags ul {
+    clear: both;
+    margin: 0 0 0 3em;
+    overflow: hidden;
+    padding: 0;
+}
+
+#easyTags ul.ui-sortable {
+    min-height: 20px;
+}
+
+#easyTags ul.ui-sortable li {
+    cursor: default;
+    opacity: 1;
+    padding: 2px 25px 2px 5px;
+}
+
+#easyTags ul:not(.ui-sortable) li {
+    opacity: 0.5 !important;
+}
+
+#easyTags ul li {
+    background-color: #666;
+    border: 0;
+    color: #fff;
+    cursor: pointer;
+    display: block;
+    float: left;
+    margin: 0.3em 0.3em 0 0 !important;
+    padding: 2px 5px;
+    white-space: nowrap;
+
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+}
+
+#easyTags ul li.active {
+    background-color: #617ba8;
+    opacity: 1 !important;
+}
+
+#tagsidebox h2 {
+    overflow: hidden;
+}
+
+.admin-toggle {
+    cursor: pointer;
+    float: right;
+    font-size: 9px;
+}
+
+#easyTags .sort-scope {
+    background-color: #ccc;
+    border: 0;
+
+    -moz-border-radius: 0;
+    -webkit-border-radius: 0;
+    border-radius: 0;
+}
+
+#easyTags .draghandle {
+    cursor: move;
+    margin: 0;
+    padding: 0 5px 0 0;
+    position: relative;
+    top: 3px;
+}
+
+#easyTags .delete {
+    cursor: pointer;
+    margin: 4px 0 0 1em;
+    position: absolute;
+}
+
+#easyTags img.add {
+    bottom: 12px;
+    cursor: pointer;
+    left: 0;
+    position: absolute;
+}
+
+#easyTags .help {
+    color: #666;
+    line-height: 1;
+    margin: 0;
+    padding: 5px 0 5px 3em;
+}
+
+#easyTags h4 {
+    color: #555;
+    line-height: 1;
+    margin: 0;
+    padding: 5px 0 5px 3em;
 }
 
 
@@ -20,724 +118,422 @@ a.interlink {
 
       <script>
 
-/*global blogsmith:true, BS:true, _blog_name:true, CKEDITOR:true */
-
-/**
- * Send a message to the user above the text entry area.
- * I want to get this incorporated into the SDK.
- * @param {Object} options
- * @config {string} [class] Class to be added to the missive
- * @config {string} [text] The text of the missive
- */
-if (typeof blogsmith.missive !== 'function') {
-  blogsmith.missive = function (options) {
-
-    var missive, settings, defaults = {
-      'class': 'blogsmith-missive',
-      text: ''
-    };
-
-    settings = $.extend({}, defaults, options);
-
-    $(document).delegate('.blogsmith-missive', 'click', function (event) {
-      var target = $(event.target);
-
-      target.hide('fast', function () {
-        $(this).remove();
-      });
-
-    });
-
-    missive = $('<div />', {
-      'class': settings['class'],
-      'text': settings['text']
-    }).css({
-      margin: '5px 0',
-      padding: '10px'
-    })
-
-      // Use jQuery UI theme classes
-      .addClass('ui-state-highlight ui-corner-all');
-
-    missive.hide().insertBefore('#postcontents').fadeIn('fast', function (e) {
-      var missives = $('.blogsmith-missive');
-
-      // If there's another missive already there, click it to dismiss it
-      if (missives.length > 1) {
-        missives.first().trigger('click');
-      }
-    });
-  };
-}
-
-/**
- * Add a button to the Blogsmith CMS that allows writers/editors to submit the
- * contents of a post and get recommended links to internal content placed into
- * their text.
- * @see http://wiki.jqueryui.com/w/page/12138135/Widget%20factory
- */
+/*global blogsmith:true, _blog_name:true, pageUpdated:true */
 (function ($, blogsmith) {
-  $.widget('blogsmith.interlinks', {
 
-    // These options will be used as defaults
+  $(function () {
+
+    $('#tagsidebox').easyTags();
+
+    // Hide the box we must put our plugin inside
+    $('div[pluginid=1056]').hide();
+
+  });
+
+  $.widget('aol.easyTags', {
+
+    // default options
     options: {
-      // getTagsApi: 'http://irshield.app.aol.com/rtnt/getTagsFromText',
-      getTagsApi: 'http://chanel-qa-d0001.cluster.aol.com:8010/rtnt/getTagsFromText',
-      taxonomyApi: 'http://taxonomy-tomcat.ops.aol.com/aoltaxo/nodeinfo/meta',
-      threshold: 0.0,
-      matchAllEntities: true,
-      content: [
-        {
-          name: 'Contents',
-          get: function () {
-            return blogsmith.getContents.call(blogsmith);
-          },
-          set: function (html) {
-            blogsmith.replaceIntoEditor(html, 1);
-          }
-        },
-        {
-          name: 'Continued Contents',
-          get: function () {
-            return blogsmith.getContinuedContents.call(blogsmith);
-          },
-          set: function (html) {
-            blogsmith.replaceIntoEditor(html, 2);
-          }
+      namespace: 'aol-easy-tags',
+      settings: '-settings', // global key in which to store settings, prefixed by namespace
+      sdk: 'blogsmith',
+      ui: {
+        tagInput: $('#posttags'),
+        title: 'Common ' + _blog_name + ' Tags:',
+        currentTags: $('#currenttags'),
+        admin: {
+          title: 'Add, remove, or rearrange common tags for ' + _blog_name,
+          help: 'Only owners and editors can change settings. Settings will affect all ' + _blog_name + ' users.',
+          off: 'Edit Common Tags',
+          on: 'Stop Editing Common Tags'
         }
-      ]
+      }
     },
 
-    /**
-     * This object holds the widget's UI elements
-     */
-    ui: {
-
-      button: $('<a>', {
-        title: 'Generate interlinks for your post\'s content',
-        href: '#',
-        text: 'Add Interlinks'
-      }),
-
-      // An animated .gif (pronounced JIFF)
-      loadingImage: $('<img />', {
-        src: 'http://o.aolcdn.com/os/blogsmith/plugins/aol-interlinks/images/loading.gif?v4'
-      }).css({
-        margin: '4px 5px 4px',
-        position: 'absolute',
-        top: 0
-      })
-
+    _refreshSettings: function () {
+      this.settings = this.sdk.getKeyValue(this.options.namespace + this.options.settings) || [];
     },
 
     _create: function () {
-      this._addTool();
-      this._bindEvents();
-      this._addCKStyles();
-    },
+      var ui = this.options.ui;
 
-    _setOption: function (key, value) {
-      switch (key) {
-      case 'threshold':
-        // handle changes to the threshold option
-        break;
-      case 'foo':
-        // bar
-        break;
+      this.sdk = window[this.options.sdk];
+
+      // If user is an owner, editor, or support staffer, make them an admin to have advanced functionality
+      this.options.bloggerDetails = this.sdk.getBloggerDetails();
+      this.options.role = this.options.bloggerDetails.role;
+
+      if (this.options.role === 'Owner' || this.options.role === 'Editor' || this.options.role === 'Support') {
+        this.options.admin = true;
+      } else {
+        this.options.admin = false;
       }
 
-      // In jQuery UI 1.8, you have to manually invoke the _setOption method from the base widget
-      $.Widget.prototype._setOption.apply(this, arguments);
-    },
+      // Settings should be an ordered array of tag names
+      this._refreshSettings();
 
-    /**
-     * Add an "Add Interlinks" button to the tools box in the right rail of the
-     * CMS. I'd like to get this added to the SDK, too.
-     **/
-    _addTool: function () {
-      this.element.addClass('add-interlinks');
-      this.element.append(this.ui.button);
-      this.element.appendTo('#postsave_extended');
-    },
+      ui.tagForm = this.element.find('form');
+      ui.header = this.element.find('h2');
+      ui.insideBox = this.element.find('.insidebox');
 
-    /**
-     * Add custom CSS to the CK Editor to visually highlight interlinks.
-     * TODO: I would really, really like to do this without an external css
-     * file so we don't have to manage another file on the origin server.
-     */
-    _addCKStyles: function () {
+      ui.easyTags = $('<div />', {
+        id: 'easyTags'
+      }).prependTo(ui.insideBox);
+      ui.easyTagList = $('<ul />').addClass('taggle-tag-list');
 
-      // Add custom config settings to CK Editor
-      BS.editor.userConfig._all = {
-        //contentsCss: ['/js/ckeditor_bs/themes/ckPixie/contents.css', 'http://o.aolcdn.com/os/blogsmith/plugins/aol-interlinks/css/style.css']
-        contentsCss: ['/js/ckeditor_bs/themes/ckPixie/contents.css', 'http://localhost:8000/src/blogsmith.devinterlinks.css']
-      };
-    },
+      if (ui.title) {
+        ui.easyTagTitle = $('<h4 />', {
+          text: ui.title
+        }).appendTo(ui.easyTags);
+      }
 
-    _bindEvents: function () {
-      this.element.bind('click', $.proxy(function (event) {
-        event.preventDefault();
+      if (this.settings && $.isArray(this.settings)) {
+        this._populateEasyTags();
+      }
 
-        // Allow devs to turn on debugging from the console
-        if (window.DEBUG_INTERLINKS) {
-          this.debug = true;
-        } else {
-          this.debug = false;
+      if (ui.easyTagList.children().length <= 0) {
+        ui.easyTagTitle.hide();
+      }
+
+      this._addEventListeners();
+
+      if (this.options.admin) {
+        ui.adminToggle = $('<img />', {
+          'class': 'admin-toggle',
+          src: 'http://cms.aol.com/bmedia/settings.png',
+          title: ui.admin.off
+        }).appendTo(ui.header);
+
+        ui.easyTagAdd = $('<img />', {
+          'class': 'add',
+          src: 'http://o.aolcdn.com/os/blogsmith/plugins/aol-tagger/images/add.png',
+          width: '16px',
+          height: '16px',
+          title: 'Add new tag'
+        }).insertAfter(ui.easyTagList).hide();
+
+
+        if (ui.admin.title) {
+          ui.adminTitle = $('<h4 />', {
+            text: ui.admin.title
+          }).insertBefore(ui.easyTagList).hide();
         }
 
-        this._getInterlinks($.proxy(this._chooseUrls, this));
+        if (ui.admin.help) {
+          ui.adminHelp = $('<p />', {
+            text: ui.admin.help,
+            'class': 'help'
+          }).insertBefore(ui.easyTagList).hide();
+        }
+      }
+
+    },
+
+    _populateEasyTags: function () {
+
+      var easyTag, ui;
+
+      ui = this.options.ui;
+
+      this.tags = this.sdk.getTags();
+
+      for (var i = 0, length = this.settings.length; i < length; i += 1) {
+
+        easyTag = $('<li />', {
+          text: this.settings[i]
+        }).appendTo(ui.easyTagList);
+
+        // Add active class if tag is already present
+        if (this.tags.indexOf(this.settings[i]) !== -1) {
+          easyTag.addClass('active');
+        }
+
+      }
+
+      ui.easyTagList.appendTo(ui.easyTags);
+
+    },
+
+    _clearEasyTags: function () {
+      this.options.ui.easyTagList.empty();
+    },
+
+    _addEventListeners: function () {
+
+      var ui = this.options.ui,
+      sdk = this.sdk;
+
+      ui.easyTagList.delegate('li', 'click', function (e) {
+
+        var remover,
+        $tag = $(e.target);
+
+        if ($tag.hasClass('active')) {
+
+          ui.currentTags.children().each(function (i, item) {
+
+            var $item = $(item);
+
+            if ($item.text() === $tag.text()) {
+              $item.remove();
+              pageUpdated();
+            }
+
+            $tag.removeClass('active');
+
+          });
+
+        } else {
+
+          sdk.setTags($tag.text());
+          $tag.addClass('active');
+
+          // Blogsmith uses return false on its remove buttons, which prevents event propagation
+          // Forces us to play a little bit nasty and unbind their events
+
+          remover = ui.currentTags.children().filter(function () {
+            return $(this).text() === $tag.text();
+          });
+
+          remover.find('img').unbind('click');
+
+          pageUpdated();
+
+        }
+
+      });
+
+      this.element.delegate('.newremover', 'click', $.proxy(function (e) {
+        var $deleteButton = $(e.target);
+
+        ui.easyTagList.children().filter(function () {
+          return $(this).text() === $deleteButton.parent().text();
+        }).trigger('click');
+
+      }, this));
+
+      // Add an easy tag in admin mode
+      this.element.delegate('.add', 'click', $.proxy(function (e) {
+        var newTag, tagName,
+        easyTags = this._getEasyTags();
+
+        tagName = prompt('Enter the name of the tag you\'d like to add to the list of ' + _blog_name + '\'s common tags.');
+
+        if (tagName) {
+
+          // If new tag is not already an easy tag, create it
+          if (easyTags.indexOf(tagName) === -1) {
+
+            newTag = $('<li />', {
+              text: tagName
+            }).appendTo(ui.easyTagList).hide();
+
+            this._addAdminElements(newTag);
+            this._saveEasyTags();
+
+            newTag.fadeIn('fast');
+
+          } else {
+            // Otherwise, highlight the currently existing one to make it clear to the user
+            ui.easyTagList.find(':contains(' + tagName + ')').effect('highlight');
+          }
+
+        }
+
+      }, this));
+
+      // Delete an easy tag in admin mode
+      ui.easyTagList.delegate('.delete', 'click', $.proxy(function (e) {
+
+        var activeTag,
+        that = this;
+
+        // If there's currently a tag for the easy tag you want to delete, deactivate it first
+        activeTag = ui.currentTags.children().filter(function () {
+          return $(this).text() === $(e.target).parent().text();
+        });
+
+        activeTag.children('.newremover').trigger('click');
+
+        $(e.target).parent().fadeOut('fast', function () {
+          $(this).remove();
+          that._saveEasyTags();
+        });
+
+
+      }, this));
+
+      if (this.options.admin) {
+
+        this.element.delegate('.admin-toggle', 'click', $.proxy(function (e) {
+
+          var $toggle = $(e.target);
+          if (! $toggle.hasClass('active')) {
+
+            $toggle.addClass('active');
+            $toggle.attr('title', ui.admin.on);
+            this._enableAdmin();
+
+
+          } else {
+            $toggle.removeClass('active');
+            $toggle.attr('title', ui.admin.off);
+            this._disableAdmin();
+          }
+
+        }, this));
+
+      }
+
+      // Here purely to demonstrate craziness in Firefox
+      /*
+         ui.easyTagList.delegate('.draghandle', 'mouseenter', $.proxy(function ( e) {
+         $tag = $(e.currentTarget).parent();
+         $tag.width($tag.width());
+         }, this));
+         */
+
+    },
+
+    _sortEasyTags: function () {
+
+      var ui = this.options.ui;
+
+      ui.easyTagList.sortable({
+        // axis: 'y',
+        // containment: 'parent',
+        // forceHelperSize: true,
+        // forcePlaceHolderSize: true,
+        handle: '.draghandle',
+        opacity: 0.5,
+        scrollSpeed: 20,
+        // start: function (e, ui) { },
+        stop: $.proxy(function (e, ui) {
+          // ui.item.parent().removeClass('sort-scope');
+          this._saveEasyTags();
+        }, this),
+        tolerance: 'pointer'
+      });
+
+    },
+
+    _enableAdmin: function () {
+      var ui = this.options.ui,
+      speed = 200;
+
+      ui.easyTagTitle.hide(speed);
+      ui.adminTitle.show(speed);
+      ui.adminHelp.show(speed);
+
+      ui.easyTagList.hide(speed, $.proxy(function () {
+
+        this._refreshSettings();
+        this._clearEasyTags();
+
+        this._populateEasyTags();
+
+        this._sortEasyTags();
+
+
+        ui.easyTagList.children().each($.proxy(function (i, item) {
+
+          this._addAdminElements($(item));
+
+        }, this));
+
+        ui.easyTagList.show(speed);
+
+        ui.easyTagAdd.show(speed, function () {
+
+          // If there are no easy tags present, automatically trigger the add button
+          // This is a lovely feature idea, but I think with the help text we now include,
+          // it's more confusing than it is helpful.
+          /*
+          if (ui.easyTagList.children().length === 0) {
+            ui.easyTagAdd.trigger('click');
+          }
+          */
+
+        });
+
+      }, this));
+
+    },
+
+    _disableAdmin: function () {
+      var ui = this.options.ui;
+
+      ui.easyTagAdd.hide('fast');
+
+      ui.adminTitle.hide('fast');
+      ui.adminHelp.hide('fast');
+      if (ui.easyTagList.children().length > 0) {
+        ui.easyTagTitle.show('fast');
+      }
+
+      ui.easyTagList.hide('fast', $.proxy(function () {
+
+        ui.easyTagList.sortable('destroy');
+
+        ui.easyTagList.find('.draghandle').remove();
+        ui.easyTagList.find('.delete').remove();
+        ui.easyTagList.show('fast');
+
       }, this));
     },
 
-    /**
-     * Numbers less than 10 should be written out.
-     * @param {Number} int
-     */
-    _numberize: function (int) {
-      var numbers;
-
-      numbers = [
-        'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'
-      ];
-
-      if (int > 0 && int < 10 && typeof numbers[int - 1] !== 'undefined') {
-        return numbers[int - 1];
-      } else {
-        return int;
-      }
-    },
-
-    /**
-     * Toggle a visual loading state for the tool button.
-     * @param {Boolean} state Turn loading off or on
-     */
-    _loading: function (state) {
-
-      if (state === 'undefined') {
-        return this.state || false;
-      }
-
-      if (state === true) {
-
-        // Turn on loading state
-        this.loadingState = true;
-
-        this.ui.loadingImage
-          .insertAfter(this.ui.button)
-          .hide()
-          .css({
-            left: this.ui.button.position().left,
-            top: this.ui.button.position().top
-          });
-
-
-        this.ui.button.animate({
-          opacity: 0
-        }, {
-          speed: 'fast',
-          complete: $.proxy(function () {
-            this.ui.loadingImage.fadeIn('fast');
-          }, this)
-        });
-
-      } else {
-
-        // Turn off loading state
-        this.loadingState = false;
-
-        this.ui.loadingImage.fadeOut('fast', $.proxy(function () {
-          this.ui.loadingImage.remove();
-          this.ui.button.animate({
-            opacity: 1,
-            speed: 'fast'
-          });
-        }, this));
-      }
-    },
-
-    /**
-     * Fetch interlinks from two different API sources. The first provides
-     * entity matches from the text, the second provides meta information (with
-     * URLs) about entities.
-     *
-     * This is a textbook use case for defferreds, but we have to support
-     * jQuery 1.4.
-     */
-    _getInterlinks: function (callback) {
-      var self, options, i, length, content, text, outstandingCalls, matches,
-        expectedContent, entities, getTagsFromText, receiveTagsData,
-        getMetaForTag, receiveMetaData, urlFilter, contentCallbackQueue;
-
-      // Turn on visual loading state of button
-      this._loading(true);
-
-      // Save a reference to this
-      self = this;
-      options = this.options;
-
-      // Keep track of oustanding AJAX Calls
-      // *mumblemumbleDeferredsmumblemumble*
-      outstandingCalls = 0;
-
-      // This array will ultimately contain all of our matches and URLs
-      matches = [];
-
-      // We'll keep track of what entities have been returned so that we don't
-      // link to them more than once
-      entities = [];
-
-      // Content is an array of content items set in the options
-      // In this case, it's the contents and continued contents portions of
-      // the CK Editor
-      content = this.options.content;
-      expectedContent = content.length;
-
-      // jQuery on an empty object - a perfect queue holder
-      contentCallbackQueue = $({});
-
-      /**
-       * Submit contents of post to API
-       * @see http://wiki.office.aol.com/wiki/Get_Tags_by_SendText
-       * @param {string} content The text to submit to the API
-       */
-      getTagsFromText = function (text) {
-        var outgoingData,
-          content = this;
-
-        outgoingData = {
-          platform: 'BS',
-          app: blogsmith.getDomain(),
-          channel: _blog_name,
-          tagger: 'T',
-          title: blogsmith.getTitle(),
-          body: text,
-          sMatchTextTags: 1,
-          sOffsets: 1
-        };
-
-        self._debug('Outgoing data:', outgoingData);
-
-        blogsmith.ajaxProxy(options.getTagsApi, outgoingData, function (data) {
-          var queueLength;
-
-          //self._debug('tag data', data);
-
-          contentCallbackQueue.queue('contentCallbacks', function (next) {
-            receiveTagsData.call(content, data);
-            next();
-          });
-
-          queueLength = contentCallbackQueue.queue('contentCallbacks').length;
-
-          //console.log('queueLength', queueLength);
-
-          if (queueLength >= expectedContent) {
-            contentCallbackQueue.dequeue('contentCallbacks');
-          }
-          //contentCallbackQueue.dequeue('contentCallbacks');
-        });
-      };
-
-      /**
-       * Receive contents from getTagsFromText API
-       * @see http://wiki.office.aol.com/wiki/Get_Tags_by_SendText
-       * @param {Object} data Data from the getTagsFromText API
-       */
-      receiveTagsData = function (data) {
-        var content, i, length, tagsData, tag, tags, callback;
-
-        content = this;
-        //console.log('content', content);
-        self._debug('Data:', data);
-
-        outstandingCalls -= 1;
-
-        // The Blogsmith AJAX Proxy returns a string - convert it to JS
-        tagsData = JSON.parse(data);
-
-        if (tagsData.statusCode !== 200) {
-          self._error(tagsData.statusCode, tagsData.statusText);
-          return;
-        }
-
-        self._debug('tagsData', tagsData);
-
-        if (!tagsData.getTagsFromTextResponse.tags) {
-          self._error('Response', 'We found no interlinks to suggest.');
-          return;
-        }
-
-        tags = tagsData.getTagsFromTextResponse.tags.matchTags.tag;
-
-        // Sort tags according to the position of the text they matched
-        tags.sort(function (a, b) {
-          var offset1, offset2;
-
-          offset1 = a.instances.instance[0].offset;
-          offset2 = b.instances.instance[0].offset;
-
-          return offset1 - offset2;
-        });
-
-        self._debug('Returned tags', tags, true);
-
-        callback = function (data) {
-          var tag = this;
-          receiveMetaData(data, content, tag);
-        };
-
-        // Fetch meta data for each tag
-        for (i = 0, length = tags.length; i < length; i += 1) {
-          tag = tags[i];
-
-          //console.log('tag.name?', tag.name);
-          // If it has the proper tag name...
-          if (tag.name === 'MATCHTEXT') {
-
-            // And we haven't gotten this entity already...
-            if (!options.matchAllEntities || $.inArray(tag.taxoId, entities) < 0) {
-              self._debug('Match:', tag);
-              self._debug('Score:', tag.score);
-
-              // And it passes our threshold
-              if (tag.score > options.threshold) {
-
-                // Call the meta API for URLs
-                outstandingCalls += 1;
-                entities.push(tag.taxoId);
-                getMetaForTag(tag.taxoId, $.proxy(callback, tag));
-                //console.log('entities', entities);
-              }
-            } else {
-              self._debug('Tag:', tag);
-              self._debug('Skipped:', tag.value + ' (' + tag.taxoId + ') is already present in the returned entities array.');
-            }
-          }
-        }
-      };
-
-      /**
-       * Submit a tag id to the taxonomy API to get meta information about it.
-       * For us, the important meta information is URLs.
-       * @param {Number} tag A tag id
-       * @param {function} callback A callback function
-       */
-      getMetaForTag = function (tag, callback) {
-
-        //console.log('getting meta for tag', tag);
-
-        blogsmith.ajaxProxy(options.taxonomyApi, {
-          qTxt: tag,
-          f: 'json',
-          authKey: 'ao1pcpvLTH7QU4gw',
-          client: 'BS'
-        }, $.proxy(callback, this));
-
-      };
-
-      /**
-       * Provide some domain-specific filtering for URLs. We've been promised that this will be incorporated into the API in the future.
-       * @param {Object} meta A meta tag from the API
-       * @returns Boolean
-       */
-      urlFilter = function (meta) {
-        var metaTypeId, disallowed;
-
-        metaTypeId = parseInt(meta.metaType.ID, 10);
-
-        disallowed = [
-          124, // musicbrainz
-          130 // autos.aol.com
-        ];
-
-        return ($.inArray(metaTypeId, disallowed) < 0) ? true : false;
-      };
-
-      /**
-       * Receive data from the meta data API for entities
-       * @param {Object} data
-       * @param {Object} content
-       * @param {Object} tag
-       */
-      receiveMetaData = function (data, content, tag) {
-        var i, length, match, meta, domain;
-
-        self._debug('Meta data for', tag.value, true);
-
-        data = JSON.parse(data);
-
-        self._debug('data', data);
-
-        if (data.getNodeResponse) {
-          meta = data.getNodeResponse.node.meta || 'undefined';
-        }
-
-        if (meta) {
-          match = {
-            text: tag.value,
-            taxoId: tag.taxoId,
-            offset: tag.instances.instance[0].offset,
-            // TODO: Is this ever not just the length of the text string?
-            length: tag.instances.instance[0].length,
-            urls: []
-          };
-
-          for (i = 0, length = meta.length; i < length; i += 1) {
-
-            self._debug('Meta:', meta[i].metaType.displayName);
-
-            if (meta[i].metaType.displayName.indexOf('URL') > -1) {
-              if (urlFilter(meta[i])) {
-                match.urls.push(meta[i].metaValue);
-              } else {
-                self._debug('URL:', meta[i].metaType.displayName + ' was rejected by the URL filter.');
-              }
-            }
-          }
-
-          if (match.urls.length) {
-            content.matches.push(match);
-          }
-        }
-
-        outstandingCalls -= 1;
-
-        // If there are no more outstanding calls...
-        if (outstandingCalls < 1) {
-
-          // Fire the callback
-          callback(self.options.content);
-
-          // And turn off the visual loading state
-          self._loading(false);
-        }
-
-      };
-
-      for (i = 0, length = content.length; i < length; i += 1) {
-        text = content[i].get();
-
-        if (text) {
-          outstandingCalls += 1;
-          content[i].matches = [];
-          getTagsFromText.call(content[i], text);
-        } else {
-          expectedContent -= 1;
-        }
-      }
-    },
-
-    _chooseUrls: function () {
-      var self, i, j, content, choose, increment, $chooseDialog;
-
-      self = this;
-      content = this.options.content;
-      i = 0;
-      j = 0;
-
-      // Create an element to use as a jQuery UI Dialog
-      $chooseDialog = $('<div>').appendTo($('body'));
-
-      choose = function () {
-        var match;
-
-        if (i >= content.length) {
-          self._addLinks();
-        } else {
-          if (!content[i].matches) {
-            content[i].matches = [];
-          }
-          match = content[i].matches[j];
-
-          if (match && match.urls.length > 1) {
-
-            // Empty out any previous content from the dialog
-            $chooseDialog.empty();
-
-            $chooseDialog.append('<p>We found ' +
-              match.urls.length + ' urls for <strong>' + match.text +
-              '</strong>. Which one would you like to use?');
-
-            $.each(match.urls, function (i, url) {
-              var $radio;
-
-              $radio = $('<input>', {
-                name: 'choices',
-                type: 'radio',
-                value: url
-              });
-
-              $chooseDialog.append($radio);
-              $radio.wrap('<label />');
-              $radio.after(url + ' <a href="' + url + '"> &rarr;</a>');
-
-              $radio.parent().css({
-                display: 'block'
-              });
-
-            });
-
-            $chooseDialog.find('input[type=radio]')
-              .first()
-              .trigger('click');
-
-            // TODO: hide the x button
-            $chooseDialog.dialog({
-              width: '50%',
-              title: 'Choose your Interlink',
-              closeOnEscape: false,
-              resizable: false,
-              modal: true,
-              //open: onOpen,
-              close: function () {
-                var selectedRadio, answer;
-
-                selectedRadio = $chooseDialog.find('input[type=radio]:checked');
-                answer = selectedRadio.val();
-
-                match.urls = [ answer ];
-                increment();
-                choose();
-              },
-              buttons: {
-                'Choose': function () {
-                  $(this).dialog('close');
-                }
-              }
-            });
-
-
-          } else {
-            increment();
-            choose();
-          }
-        }
-
-      };
-
-      increment = function () {
-        j += 1;
-
-        if (j >= content[i].matches.length) {
-          i += 1;
-          j = 0;
-        }
-      };
-
-      choose();
+    _addAdminElements: function ($elem) {
+
+      var draghandle, deleteButton;
+
+      draghandle = $('<img />', {
+        'class': 'draghandle',
+        src: 'http://o.aolcdn.com/os/blogsmith/plugins/aol-tagger/images/draghandle.png',
+        width: '12px',
+        height: '12px'
+      }).prependTo($elem);
+
+      deleteButton = $('<img />', {
+        'class': 'delete',
+        src: '/bmedia/remtag.png',
+        width: '8px',
+        height: '8px'
+      }).appendTo($elem);
 
     },
 
-    _addLinks: function () {
-      var self, content, totalMatches, missiveText;
+    _getEasyTags: function () {
+      var ui = this.options.ui,
+      easyTags = [];
 
-      self = this;
-      content = this.options.content;
-      totalMatches = 0;
-
-      $.each(content, function (i, contentItem) {
-        var contentArray, newContent;
-
-        // Turn the content string into an array split on each character
-        contentArray = contentItem.get().split('');
-
-        if (contentItem.matches.length) {
-          self._debug('Final report', '•', true);
-
-          $.each(contentItem.matches, function (i, match) {
-            self._debug('Matches with allowed URLs:', match);
-
-            // Use the offset to find the right position in the array to add new
-            // html content
-            contentArray[match.offset] = [
-              "<a class=\"interlink\" onclick=\"bN.set(\'blogsmith_interlink\', \'`\', true); bN.set(\'blogsmith_taxo_id\', \'" + match.taxoId + "\', true);\" href=",
-              match.urls[0],
-              '">',
-              contentArray[match.offset]
-            ].join('');
-
-            // Find the end of the match and add new html
-            contentArray[match.offset + match.length - 1] = [
-              contentArray[match.offset + match.length - 1],
-              '</a>'
-            ].join('');
-
-            totalMatches += 1;
-
-          });
-
-        }
-
-        newContent = contentArray.join('');
-        contentItem.set(newContent);
-
+      ui.easyTagList.children().each(function (i, item) {
+        easyTags.push($(this).text());
       });
 
-      if (totalMatches < 1) {
-        missiveText = 'We found no interlinks to suggest.';
-      } else if (totalMatches === 1) {
-        missiveText = 'We found one suggested interlink. We\'ve placed it in your post\'s contents.';
-      } else {
-        missiveText = 'We found ' + this._numberize(totalMatches) + ' suggested interlinks. We\'ve placed them in your post\'s contents.';
-      }
+      return easyTags;
 
-      blogsmith.missive({
-        text: missiveText
+    },
+
+    _saveEasyTags: function () {
+      var newSettings = [];
+
+      this.options.ui.easyTagList.children().each(function (i, item) {
+        newSettings.push($(item).text());
       });
+
+      this.sdk.setKeyValue(this.options.namespace + this.options.settings, newSettings);
     },
 
-    _error: function (statusCode, statusText) {
-      this._loading(false);
-      blogsmith.missive({
-        text: statusCode + ': ' + statusText
-      });
+    _init: function () {
     },
 
-    /*
-     * Ouput debugging info to the console. This lets developers opt in to
-     * verbose debugging output if they need to examine the inner workings of
-     * the plugin.
-     */
-    _debug: function (label, message, heading) {
-      var i, separator;
-      heading = heading || false;
-      if (!this.debug) {
-        return;
-      } else {
-        if (window.console) {
+    _destroy: function () {
 
-          if (heading) {
-            // Match the separator to the length of the heading output
-            // TODO: fix the hardcoding of characters to labels.
-            i = 12 + label.length + 1 + message.length;
-            separator = '';
-            while (i) {
-              separator += '¯';
-              i -= 1;
-            }
-            console.log('\n' + separator);
-            console.log('Interlinks:', label, message);
-            console.log('\n' + separator);
-          } else {
-            console.log('Interlinks:', label, message);
-          }
-        }
-      }
-    },
-
-    destroy: function () {
-      // In jQuery UI 1.8, you must invoke the destroy method from the base widget
-      $.Widget.prototype.destroy.call(this);
     }
+
   });
+
 })(jQuery, blogsmith);
-
-// On DOM Ready...
-$(document).ready(function () {
-
-  // Initialize the interlinks widget on an empty span
-  $('<span>').interlinks();
-});
 
 
       </script>

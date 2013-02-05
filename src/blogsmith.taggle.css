@@ -4,9 +4,9 @@
     position: relative;
 }
 
-#easyTags ul {
+#easyTags .taggle-tag-list {
     clear: both;
-    margin: 0 0 0 3em;
+    margin: 0 0 0 3em !important;
     overflow: hidden;
     padding: 0;
 }
