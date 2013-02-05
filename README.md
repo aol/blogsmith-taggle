@@ -1,7 +1,7 @@
 blogsmith-taggle
 ====================
 
-"Taggle": a portmanteau of "tagger" and "toggle". Adds handy buttons for commonly used or important tags. Easily customizable by owners/editors for particular sites. (<a href="http://wiki.office.aol.com/wiki/Blogsmith/Plugins/Taggle">documentation</a>a>)
+"Taggle": a portmanteau of "tagger" and "toggle". Adds handy buttons for commonly used or important tags. Easily customizable by owners/editors for particular sites. (<a href="http://wiki.office.aol.com/wiki/Blogsmith/Plugins/Taggle">documentation</a>)
 
 Activation
 ==========
