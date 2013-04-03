@@ -1,11 +1,16 @@
 <!--
-* Interlinks - v0.1.0 - 2013-02-05, 4:47PM EST
-* A Blogsmith plugin for adding relevant links to internal content to Blogsmith posts.
-* https://github.com/aol/blogsmith-interlinks
-* Copyright (c) 2013 Nate Eagle and Shawn Carnell; Licensed BSD
+* Taggle - v0.1.1 - 2013-02-05, 4:56PM EST
+* "Taggle": a portmanteau of "tagger" and "toggle". Adds handy buttons for commonly used or important tags. Easily customizable by owners/editors for particular sites.
+* https://github.com/aol/blogsmith-taggle
+* Copyright (c) 2013 Nate Eagle; Licensed BSD
 --> 
 
-<style type="text/css">
+
+<blogsmith:box style="display: none;">
+    <blogsmith:title>Interlinks</blogsmith:title>
+    <blogsmith:body>
+
+      <style type="text/css">
 
 #easyTags {
     clear: both;
@@ -13,9 +18,9 @@
     position: relative;
 }
 
-#easyTags ul {
+#easyTags .taggle-tag-list {
     clear: both;
-    margin: 0 0 0 3em;
+    margin: 0 0 0 3em !important;
     overflow: hidden;
     padding: 0;
 }
@@ -110,11 +115,7 @@
 }
 
 
-</style>
-
-<blogsmith:box style="display: none;">
-    <blogsmith:title>Interlinks</blogsmith:title>
-    <blogsmith:body>
+      </style>
 
       <script>
 
