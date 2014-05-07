@@ -80,7 +80,7 @@ window.ampPlugins = $.extend(window.ampPlugins, { 'taggle': { loaded: true } });
 			if (this.options.admin) {
 				ui.adminToggle = $('<img />', {
 					'class': 'admin-toggle',
-					src: 'bmedia/settings.png',
+					src: '/bmedia/settings.png',
 					title: ui.admin.off
 				}).appendTo(ui.header);
 
