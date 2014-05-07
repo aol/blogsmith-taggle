@@ -1,0 +1,18 @@
+[
+	{
+		"message": "Any external assets need to be fetched using https://.",
+		"regexp": "(url\\(http://|src=\"http://|src: ['|\"]http://)"
+	},
+	{
+		"message": "Assets from the origin server should use SSL, with \"https://s.aolcdn.com\" instead of \"http://o.aolcdn.com\".",
+		"pattern": "o.aolcdn.com"
+	},
+	{
+		"message": "Please don't reference sandbox URLs in production plugins / screens.",
+		"pattern": ".sandbox."
+	},
+	{
+		"message": "You shouldn't need to vendor-prefix any of your CSS properties; that's taken care of by autoprefixer.",
+		"regexp": "-(moz|webkit|o)-"
+	}
+]

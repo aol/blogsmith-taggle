@@ -1,0 +1,55 @@
+<blogsmith:box style="display: none;">
+<blogsmith:title>Taggle</blogsmith:title>
+<blogsmith:body>
+
+	<style id="taggle-styles">
+	@@css
+	</style>
+
+		<div id="plugin-taggle">
+			<%
+				// Add any markup you want output to the page here.
+				// Of course, you can always add it via JavaScript instead.
+			%>
+		</div>
+
+		<% if (dev) { %>
+		<script>
+			if (window.console && window.console.log) {
+				console.log('Trying to pull CSS and JS from localhost for the Taggle plugin...');
+			}
+		</script>
+		<script src="//localhost:8000/taggle/js/main.js"></script>
+		<script>
+		(function () {
+			// Try to load CSS from localhost
+			var $css = $('<link>', {
+				rel: 'stylesheet',
+				type: 'text/css',
+				href: '//localhost:8000/taggle/css/main.css'
+			});
+
+			// If CSS is successfully loaded from localhost, remove
+			// the styles we have above
+			$css[0].onload = function () {
+				$('#taggle-styles').remove();
+			}
+			$css.prependTo($('#taggle'));
+
+			// Try to load JS from localhost
+			if (!(window.ampPlugins &&
+					window.ampPlugins['taggle'] &&
+					window.ampPlugins['taggle'].loaded)
+				 ) {
+				@@js
+			}
+		})();
+		</script>
+		<% } else { %>
+		<script>
+			@@js
+		</script>
+		<% } %>
+
+</blogsmith:body>
+</blogsmith:box>
