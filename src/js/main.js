@@ -6,10 +6,6 @@ window.ampPlugins = $.extend(window.ampPlugins, { 'taggle': { loaded: true } });
 (function ($, blogsmith) {
 	'use strict';
 
-	$(function () {
-		$('#tagsidebox').easyTags();
-	});
-
 	$.widget('aol.easyTags', {
 
 		// default options
@@ -391,4 +387,8 @@ window.ampPlugins = $.extend(window.ampPlugins, { 'taggle': { loaded: true } });
 
 	});
 
+	$(function () {
+		$('#tagsidebox').easyTags();
+	});
+		
 })(jQuery, blogsmith);
